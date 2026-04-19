@@ -1,0 +1,36 @@
+import pytest
+from ebadge_cli.bind_response import parse_bind_response
+
+
+def test_parse_bind_response_valid():
+    data = [
+        0x01,
+        0x32, 0x33, 0x00,
+        0x31, 0x2E, 0x30, 0x2E, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x0A, 0x00, 0x00, 0x00,
+        0x78, 0x56, 0x34, 0x12,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xAA, 0xAA, 0xAA, 0xAA,
+        0xCC, 0xCC, 0xCC, 0xCC,
+        0xBB, 0xBB, 0xBB, 0xAA,
+        0x76, 0x2E, 0x30, 0x00, 0x00,
+        0x01, 0x02, 0x03,
+    ]
+    result = parse_bind_response(data)
+    assert result is not None
+    assert result.state == 1
+    assert result.pact_version == "23"
+    assert result.firmwa_version == "1.0.0"
+    assert result.function_config == 0xFFFFFFFF
+    assert result.function_config1 == 0xAAAAAAAA
+    assert result.function_bytes == [0x01, 0x02, 0x03]
+
+
+def test_parse_bind_response_empty():
+    result = parse_bind_response([])
+    assert result is None
+
+
+def test_parse_bind_response_too_short():
+    result = parse_bind_response([0x01, 0x32, 0x33])
+    assert result is None
