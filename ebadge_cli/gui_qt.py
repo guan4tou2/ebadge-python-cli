@@ -733,7 +733,8 @@ def _list_system_fonts() -> list[tuple[str, Optional[str]]]:
 TEXT_MODES = [
     ("滾動 (跑馬燈)", "scroll"),
     ("靜置 (置中)", "static"),
-    ("圓形旋轉", "circle"),
+    ("圓形旋轉 (整段旋轉)", "circle"),
+    ("繞圓環跑 (字沿外圈)", "orbit"),
     ("脈衝縮放", "pulse"),
     ("波浪", "wave"),
 ]

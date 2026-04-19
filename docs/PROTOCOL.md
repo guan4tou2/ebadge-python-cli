@@ -198,7 +198,9 @@ UTF-16LE 編碼 + NULL 結尾。
 
 ## 9. 參考來源
 
-- Android app: `com.zijun.zrun` v2.1.7（`decompiled/sources/com/qix/library/`, `com/jieli/jl_rcsp/`）
-- `hybridherbst/web-bluetooth-e87`：網頁版上傳實作（無 auth / 無 OTA）
-- Jieli SDK (`jl_rcsp-3.0.aar`)：RCSP 協議規格
-- 實機 HCI 分析（部分，完整 HCI 擷取可能揭露更多路徑）
+本文件的協議還原建立在以下工作之上：
+
+- **[hybridherbst/web-bluetooth-e87](https://github.com/hybridherbst/web-bluetooth-e87)** — Web Bluetooth 版 E87 上傳工具。**第 4 節的 10-phase 上傳流程主要是從這個 repo 反向推導得出**，包括 auth 握手時序、phase 順序、FD02 bootstrap 指令序列、windowed data transfer 的視窗大小。若無此 repo，實作時間可能要多數倍。
+- Android app `com.zijun.zrun` v2.1.7（`com/qix/library/`, `com/jieli/jl_rcsp/`）— 9E 協議、BadgeInfo、電量推送觸發點的來源
+- Jieli `jl_rcsp-3.0.aar` SDK — RCSP 指令、AttrBean / TargetInfoResponse 結構規格
+- 實機 HCI 及 bleak notify 流量分析 — 交叉驗證上述來源

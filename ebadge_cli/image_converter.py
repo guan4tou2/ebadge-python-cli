@@ -190,6 +190,46 @@ def text_frames(
             frames.append(img)
         return frames
 
+    if mode == "orbit":
+        # 文字沿圓環排列，整段繞著徽章周圍跑
+        # 每個字獨立 render 並旋轉 (tangent to circle)
+        cx, cy = w / 2, h / 2
+        radius = min(w, h) / 2 - font_size * 0.7   # 留邊避免超出圓盤
+        # 每個字的 sprite
+        char_sprites = []
+        for ch in text:
+            cb = ImageDraw.Draw(dummy).textbbox((0, 0), ch, font=font)
+            cw, chh = cb[2] - cb[0], cb[3] - cb[1]
+            sp = Image.new("RGBA", (cw + 4, chh + 4), (0, 0, 0, 0))
+            _sw = 2 if bold else 0
+            ImageDraw.Draw(sp).text((-cb[0], -cb[1]), ch, fill=font_color, font=font,
+                                     stroke_width=_sw, stroke_fill=font_color)
+            char_sprites.append(sp)
+        # 每個字間隔 = 字體大小對應的角度
+        if not char_sprites:
+            return [Image.new("RGB", (w, h), bg_color)] * n
+        # 粗估每字角度間距：以最寬字 / 圓周 比例
+        max_w = max(s.width for s in char_sprites)
+        angle_step = (max_w * 1.15) / radius * (180 / math.pi)  # degrees
+        for i in range(n):
+            progress = i / n  # 0 .. 1
+            start_angle = -90 + progress * 360  # 從頂端 12 點開始，順時針
+            img = Image.new("RGB", (w, h), bg_color)
+            for j, sp in enumerate(char_sprites):
+                ang_deg = start_angle + j * angle_step
+                ang_rad = math.radians(ang_deg)
+                # 文字位置 (圓心指向外)
+                px = cx + radius * math.cos(ang_rad)
+                py = cy + radius * math.sin(ang_rad)
+                # 旋轉字元：讓字頭指向圓心外側
+                # 字形預設朝上，需旋轉 (ang_deg + 90)
+                rotated = sp.rotate(-(ang_deg + 90),
+                                     resample=Image.Resampling.BICUBIC, expand=True)
+                rx, ry = rotated.size
+                img.paste(rotated, (int(px - rx / 2), int(py - ry / 2)), rotated)
+            frames.append(img)
+        return frames
+
     if mode == "wave":
         # y 軸正弦波動
         sprite = Image.new("RGBA", (tw + 4, th + 4), (0, 0, 0, 0))

@@ -126,6 +126,16 @@ uv run pytest
 
 ---
 
+## 致謝 / Credits
+
+本專案的 RCSP 上傳協議實作大量參考了 **[hybridherbst/web-bluetooth-e87](https://github.com/hybridherbst/web-bluetooth-e87)** — 該 repo 的 Web Bluetooth 上傳實作是我們理解 10-phase 流程、auth 握手以及 windowed data transfer 的關鍵參考。
+
+其他參考：
+- [ZRun Android APK](https://apkpure.com/) — 官方 app 反編譯，用於還原 9E 協議 / BadgeInfo / 電量推送細節
+- Jieli `jl_rcsp` SDK — RCSP 指令、AttrBean、TargetInfoResponse 規格
+
+---
+
 ## License
 
 MIT
