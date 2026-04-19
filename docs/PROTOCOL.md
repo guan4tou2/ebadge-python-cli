@@ -171,15 +171,40 @@ UTF-16LE 編碼 + NULL 結尾。
 
 ## 7. bind / serial / firmware version
 
-**此 firmware 沒開** 獨立 bind 查詢。試過：
+**此 firmware 沒開** 獨立 bind 查詢：
 
 - pre-auth cmd 0x60 → 無回應
 - post-auth cmd 0x60 via AE01 (E87 格式) → 無回應
 - post-auth 9E bind frame via FD02 → 只回 1-byte ACK `0x02`，不是完整 bind response
 
-→ **OTA 無解**：Android 端 `ota_api.py` 需要 `device_serial_num` + `firmware_version`，兩者皆由 bind response 提供，但此 firmware 不給。用 fake 值打雲端 API 回 `CD000003 處理失敗`。
+### Bootstrap 間接取得的裝置資訊
 
-對應的模組 `ota_api.py`、`ota_update.py`、`rcsp_probe.probe_device()` 保留在源碼，供其他 firmware 使用。
+bootstrap Phase 3 的 cmd 0x03 `GetTargetInfo` 回傳 **125-byte TLV 結構** (在 `rcsp_probe.py` 可另行解析)：
+
+| TLV type | len | 內容 | 對應欄位（推測） |
+|---|---|---|---|
+| 0x02 | 8B | `46 85 00 01 8b a6 0e 00` | BD MAC + 2B trailer |
+| 0x06 | 1B | `0d` (=13) | versionCode |
+| 0x07 | 2B | `"10"` ASCII | protocolVersion 或 versionName |
+| 0x0b | 16B | `"hE9yfseX6UdK7rFh"` | **authKey** |
+| 0x0c | 20B | `"jl_sdk_ac697_publish"` | **projectCode**（晶片 AC697）|
+| 0x0d | 4B | `01 10 02 1c` | uboot / fw 版本號 |
+| 0x11 | 7B | `00 46 85 00 01 8b a6` | **BD MAC**（同 0x02 前 6B）|
+| 0x15 | 4B | `00 00 00 07` | uid |
+
+### OTA 仍無解的原因
+
+Android 端 `ota_api.py` 需要 `device_serial_num` + `firmware_version`：
+
+```python
+{"model": str(bindResponse.serialNumber), "type": "OTA", "version": bindResponse.firmwaVersion}
+```
+
+- `serialNumber` 是 **4-byte int**（BE）來自 bind 0x61 response，**TargetInfo 不含**此欄位
+- 實測 URL：`POST https://www.zgntec.com/hy-cloud/app/{dev|prod}/upgrade`（其他路徑 404）
+- 嘗試把 MAC、MAC 截斷、TLV 裡所有 4-byte int、projectCode 等**數十組**組合當 serial，雲端全部回 `CD000003 處理失敗`
+
+→ 沒 bind 就拿不到正確 serial。OTA 模組（`ota_api.py`、`ota_update.py`、`rcsp_probe.probe_device()`）保留在源碼，其他能正常 bind 的 firmware 版本可用。
 
 ---
 
